@@ -283,3 +283,154 @@ footer a:hover{color:#fff}
   .nav-cta{display:none}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* =========================================================
+   UI 업그레이드: 그림자 · 효과 · 모션
+   ========================================================= */
+:root{
+  --sh-1:0 1px 2px rgba(78,63,55,.06),0 2px 6px rgba(78,63,55,.05);
+  --sh-2:0 2px 4px rgba(78,63,55,.05),0 10px 24px -6px rgba(78,63,55,.12);
+  --sh-3:0 4px 8px rgba(78,63,55,.06),0 24px 48px -12px rgba(78,63,55,.22);
+  --sh-warm:0 18px 40px -14px rgba(232,137,47,.55);
+  --sh-cold:0 18px 40px -14px rgba(63,95,132,.55);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+
+/* 스크롤 진행 바 */
+.progress{position:fixed;left:0;top:0;height:3px;width:100%;z-index:30;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--olive),var(--wheat))}
+
+/* 메뉴 현재 위치 표시 */
+.menu a{position:relative;padding:4px 0}
+.menu a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;border-radius:2px;background:var(--olive-deep);transform:scaleX(0);transition:transform .3s var(--ease)}
+.menu a:hover::after,.menu a.active::after{transform:scaleX(1)}
+.menu a.active{color:var(--bark)}
+.nav.scrolled{box-shadow:0 6px 20px -12px rgba(78,63,55,.25)}
+
+/* 버튼 */
+.btn{position:relative;overflow:hidden;box-shadow:var(--sh-1);transition:transform .2s var(--ease),box-shadow .25s var(--ease),background-color .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--sh-2)}
+.btn:active{transform:translateY(0) scale(.98);box-shadow:var(--sh-1)}
+.btn:not(.ghost)::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-20deg);transition:left .6s var(--ease)}
+.btn:not(.ghost):hover::after{left:120%}
+.btn.ghost{box-shadow:none}
+.nav-cta{box-shadow:var(--sh-1);transition:transform .2s var(--ease),box-shadow .25s,background-color .2s}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
+
+/* 히어로 배경 빛 */
+.hero{position:relative;overflow:hidden}
+.hero::before,.hero::after{content:"";position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;z-index:0}
+.hero::before{width:520px;height:520px;right:-120px;top:-140px;background:radial-gradient(circle,rgba(159,193,228,.45),transparent 65%)}
+.hero::after{width:460px;height:460px;left:-160px;bottom:-200px;background:radial-gradient(circle,rgba(246,205,85,.35),transparent 65%)}
+.hero .wrap{position:relative;z-index:1}
+
+/* 창문 */
+.windows{perspective:1200px}
+.house{box-shadow:var(--sh-3);transition:transform .5s var(--ease),box-shadow .4s;transform-style:preserve-3d}
+.house:first-child:hover{box-shadow:var(--sh-3),var(--sh-warm)}
+.house:nth-child(2):hover{box-shadow:var(--sh-3),var(--sh-cold)}
+.win{box-shadow:inset 0 8px 18px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.6)}
+.win.warm .lamp{animation:glow 4s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.85;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.08)}}
+.win.warm::marker{display:none}
+.snow{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.snow i{position:absolute;top:-10px;width:var(--s,4px);height:var(--s,4px);border-radius:50%;background:#fff;opacity:var(--o,.8);animation:fall var(--d,8s) linear var(--delay,0s) infinite}
+@keyframes fall{to{transform:translate3d(var(--x,10px),calc(100% + 420px),0)}}
+.win .temp{transition:transform .3s var(--ease)}
+.vs{animation:vsPulse 2.8s ease-in-out infinite}
+@keyframes vsPulse{0%,100%{box-shadow:0 8px 24px rgba(78,63,55,.28),0 0 0 0 rgba(78,63,55,.25)}50%{box-shadow:0 8px 24px rgba(78,63,55,.28),0 0 0 10px rgba(78,63,55,0)}}
+
+/* 칩, 선택지 */
+.chip{box-shadow:var(--sh-1)}
+.chip:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
+.chip[aria-pressed="true"]{box-shadow:0 6px 16px -6px rgba(94,115,34,.6)}
+.doing .chip{box-shadow:none}
+.opt{transition:border-color .15s,background-color .15s,transform .25s var(--ease),box-shadow .25s}
+.opt:hover{transform:translateY(-2px);box-shadow:var(--sh-2);background:#fff}
+.opt[aria-pressed="true"]{box-shadow:0 10px 22px -10px rgba(94,115,34,.55)}
+.opt[aria-pressed="true"] .em{animation:pop .45s var(--ease)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.3) rotate(-8deg)}100%{transform:scale(1)}}
+
+/* 카드 그림자와 호버 */
+.panel{box-shadow:var(--sh-2)}
+.stat,.act-card,.convert,.program,.define{box-shadow:var(--sh-1);transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+.stat:hover,.act-card:hover,.convert:hover,.program:hover{transform:translateY(-4px);box-shadow:var(--sh-3)}
+.stat.hl{box-shadow:0 20px 40px -18px rgba(94,115,34,.7)}
+.calc{box-shadow:0 24px 50px -20px rgba(70,87,25,.75);position:relative;overflow:hidden}
+.calc::before{content:"";position:absolute;width:320px;height:320px;right:-100px;top:-120px;border-radius:50%;background:radial-gradient(circle,rgba(246,205,85,.35),transparent 65%);pointer-events:none}
+.calc > *{position:relative}
+.room{box-shadow:var(--sh-2)}
+.room.mine{box-shadow:var(--sh-2),inset 0 0 0 1px rgba(255,255,255,.5)}
+.story{box-shadow:var(--sh-1)}
+.items li{padding:6px;margin:-6px;border-radius:14px;transition:background-color .2s}
+.items li:hover{background:#fff}
+.items .em,.conv-list .em,.define .ico,.program .ico{box-shadow:var(--sh-1)}
+.gap-pill{box-shadow:0 8px 20px -8px rgba(78,63,55,.6)}
+.gap-pill.bump{animation:bump .5s var(--ease)}
+@keyframes bump{40%{transform:scale(1.12)}}
+.moment{transition:transform .35s var(--ease),background-color .3s,border-color .3s}
+.moment:hover{transform:translateY(-4px);background:rgba(255,255,255,.11);border-color:rgba(159,193,228,.35)}
+.chart-card{box-shadow:0 30px 60px -30px rgba(0,0,0,.5)}
+.stepper button{transition:background-color .15s,transform .15s}
+.stepper button:active{transform:scale(.9)}
+.money.tick{animation:tick .4s var(--ease)}
+@keyframes tick{40%{transform:translateY(-4px);opacity:.6}}
+
+/* 슬라이더 손잡이 */
+input[type=range]::-webkit-slider-thumb{transition:transform .15s var(--ease),box-shadow .15s}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.12);box-shadow:0 0 0 8px rgba(78,63,55,.1)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 0 0 10px rgba(78,63,55,.14)}
+
+/* 그래프 선 그리기 */
+#chart .line{stroke-dasharray:var(--len);stroke-dashoffset:var(--len)}
+#chart.drawn .line{transition:stroke-dashoffset 1.8s var(--ease);stroke-dashoffset:0}
+#chart .area{opacity:0;transition:opacity 1s ease .6s}
+#chart.drawn .area{opacity:1}
+#chart .minpt{opacity:0;transition:opacity .4s ease 1.6s}
+#chart.drawn .minpt{opacity:1}
+
+/* 스크롤 등장 (섹션 머리와 묶음 단위로 한 번만) */
+.reveal-up{opacity:0;transform:translateY(24px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.reveal-up.in{opacity:1;transform:none}
+.stagger > *{opacity:0;transform:translateY(20px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.stagger.in > *{opacity:1;transform:none}
+.stagger.in > *:nth-child(2){transition-delay:.1s}
+.stagger.in > *:nth-child(3){transition-delay:.2s}
+.stagger.in > *:nth-child(4){transition-delay:.3s}
+
+@media (hover:none){
+  .stat:hover,.act-card:hover,.convert:hover,.program:hover,.moment:hover,.opt:hover,.btn:hover{transform:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .reveal-up,.stagger > *{opacity:1!important;transform:none!important}
+  #chart .line{stroke-dashoffset:0!important}
+  #chart .area,#chart .minpt{opacity:1!important}
+  .snow{display:none}
+}
+
+/* =========================================================
+   흰 배경 정리: 크림 톤과 배경 빛 번짐을 걷어내고 깔끔하게
+   ========================================================= */
+:root{
+  --paper:#F4F5F2;   /* 카드 안쪽 면 (옅은 회색) */
+  --line:rgba(78,63,55,.11);
+  --sh-1:0 1px 2px rgba(30,30,30,.05);
+  --sh-2:0 1px 2px rgba(30,30,30,.04),0 8px 20px -10px rgba(30,30,30,.12);
+  --sh-3:0 2px 4px rgba(30,30,30,.04),0 18px 36px -16px rgba(30,30,30,.18);
+}
+body{background:#fff}
+.nav{background:rgba(255,255,255,.92)}
+.hero::before,.hero::after,.calc::before{display:none}
+.problem{background:#fff;border-top:1px solid var(--line);border-bottom:0}
+.act{background:#fff;border-top:1px solid var(--line)}
+.house,.panel,.convert,.act-card,.program{background:#fff;border-color:var(--line)}
+.stat{background:var(--paper);border-color:transparent}
+.define{background:#EEF3F8}
+.badge{background:#F1F4E8}
+.chip{box-shadow:none}
+.chip:hover{box-shadow:none;background:var(--paper)}
+.chip[aria-pressed="true"]:hover{background:var(--olive-deep)}
+.opt:hover{background:#fff}
+.house:first-child:hover,.house:nth-child(2):hover{box-shadow:var(--sh-3)}
+footer{background:#2B2420}
+.stat.hl,.calc{box-shadow:var(--sh-2)}
+.chip[aria-pressed="true"],.opt[aria-pressed="true"]{box-shadow:none}

@@ -106,7 +106,8 @@
   function render(outdoor){
     const mine = state.wear, theirs = theirRoom(outdoor), b = band(theirs), g = mine - theirs;
     $("#rPlace").textContent = outdoor === state.low ? `오늘 밤 ${state.place} 최저 ${outdoor}℃일 때` : `바깥 기온이 ${outdoor}℃일 때`;
-    $("#gap").textContent = g > 0 ? `${g}℃ 차이` : "비슷한 온도";
+    const gapText = g > 0 ? `${g}℃ 차이` : "비슷한 온도", pill = $("#gap");
+    if (pill.textContent !== gapText){ pill.textContent = gapText; pill.classList.remove("bump"); void pill.offsetWidth; pill.classList.add("bump"); }
     $("#tMine").innerHTML = C(mine); $("#tTheirs").innerHTML = C(theirs);
     $("#subMine").textContent = mine >= 18 ? "건강을 지키기에 충분한 온도예요." : "조금 서늘하지만 언제든 난방을 켤 수 있어요.";
     $("#subTheirs").textContent = theirs < 18 ? `WHO 권장 최저 온도보다 ${18 - theirs}℃ 낮아요.` : "그래도 밤이 깊으면 금방 식어요.";
@@ -132,13 +133,16 @@
     let g = `<defs><linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9FC1E4" stop-opacity=".45"/><stop offset="1" stop-color="#9FC1E4" stop-opacity="0"/></linearGradient></defs>`;
     for (let v = Math.ceil(lo / 5) * 5; v <= hi; v += 5) g += `<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.08)"/><text x="${L-10}" y="${Y(v)+4}" text-anchor="end">${v}℃</text>`;
     rooms.forEach((x, i) => { if (i % 3 === 0) g += `<text x="${X(i)}" y="${Ht-10}" text-anchor="middle">${x.h}시</text>`; });
-    g += `<path d="M${X(0)},${Y(lo)} ${P.map(p => "L" + p.join(",")).join(" ")} L${X(rooms.length-1)},${Y(lo)} Z" fill="url(#ar)"/>`;
+    g += `<path d="M${X(0)},${Y(lo)} ${P.map(p => "L" + p.join(",")).join(" ")} L${X(rooms.length-1)},${Y(lo)} Z" fill="url(#ar)" class="area"/>`;
     g += `<line x1="${L}" x2="${W-R}" y1="${Y(18)}" y2="${Y(18)}" stroke="#fff" stroke-dasharray="6 6" opacity=".7"/><text x="${W-R}" y="${Y(18)-8}" text-anchor="end" style="fill:#fff">WHO 권장 18℃</text>`;
     if (state.wear !== null) g += `<line x1="${L}" x2="${W-R}" y1="${Y(state.wear)}" y2="${Y(state.wear)}" stroke="#F6CD55" stroke-width="3"/><text x="${L+8}" y="${Y(state.wear)-8}" style="fill:#F6CD55;font-weight:700">내 방 ${state.wear}℃</text>`;
-    g += `<polyline points="${P.map(p => p.join(",")).join(" ")}" fill="none" stroke="#9FC1E4" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g += `<polyline points="${P.map(p => p.join(",")).join(" ")}" class="line" fill="none" stroke="#9FC1E4" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
     const mi = rooms.reduce((a, x, i) => x.r < rooms[a].r ? i : a, 0);
-    g += `<circle cx="${X(mi)}" cy="${Y(rooms[mi].r)}" r="7" fill="#fff" stroke="#5F82AA" stroke-width="3"/><text x="${X(mi)}" y="${Y(rooms[mi].r)+28}" text-anchor="middle" style="fill:#fff;font-weight:700">${rooms[mi].h}시 ${rooms[mi].r}℃</text>`;
-    $("#chart").innerHTML = g;
+    g += `<g class="minpt"><circle cx="${X(mi)}" cy="${Y(rooms[mi].r)}" r="7" fill="#fff" stroke="#5F82AA" stroke-width="3"/><text x="${X(mi)}" y="${Y(rooms[mi].r)+28}" text-anchor="middle" style="fill:#fff;font-weight:700">${rooms[mi].h}시 ${rooms[mi].r}℃</text></g>`;
+    const chart = $("#chart"), wasDrawn = chart.classList.contains("drawn");
+    chart.innerHTML = g;
+    const line = chart.querySelector(".line"); line.style.setProperty("--len", Math.ceil(line.getTotalLength()));
+    if (wasDrawn){ chart.classList.remove("drawn"); void chart.getBoundingClientRect(); chart.classList.add("drawn"); }
     $("#chartTitle").textContent = `${state.place}, 앞으로 24시간`;
     $("#dayLead").textContent = `가장 추운 ${rooms[mi].h}시, 난방하지 못하는 방은 ${rooms[mi].r}℃까지 내려가요. WHO 권장 온도보다 ${Math.max(0, 18 - rooms[mi].r)}℃ 낮아요.`;
     const at = h => { const f = H.find(x => x.h === h) || H[0]; return theirRoom(f.t); };
@@ -150,7 +154,7 @@
   function renderCalc(){
     const d = state.deg, month = 5150 * d, winter = month * 3;
     $("#deg").textContent = `${d}℃`; $("#minus").disabled = d <= 1; $("#plus").disabled = d >= 3;
-    $("#money").textContent = `한 겨울 약 ${won(winter)}원`;
+    const mo = $("#money"); mo.textContent = `한 겨울 약 ${won(winter)}원`; mo.classList.remove("tick"); void mo.offsetWidth; mo.classList.add("tick");
     $("#moneySub").textContent = `한 달에 ${won(month)}원씩, 12월부터 2월까지 아낄 수 있어요.`;
     $("#convTimes").textContent = `${(winter / 10000).toFixed(1).replace(".0","")}번`;
     $("#convPct").textContent = `약 ${7 * d}%`;
@@ -172,4 +176,69 @@
   $("#share").addEventListener("click", share); $("#share2").addEventListener("click", share);
 
   const nav = $("#nav"); addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 8), { passive:true });
+
+  /* ---------- UI 효과 ---------- */
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // 스크롤 진행 바
+  const bar = document.createElement("div"); bar.className = "progress"; document.body.appendChild(bar);
+  const onScroll = () => { const max = document.documentElement.scrollHeight - innerHeight; bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`; };
+  addEventListener("scroll", onScroll, { passive:true }); onScroll();
+
+  // 메뉴에 현재 섹션 표시
+  const links = $$(".menu a");
+  const secObs = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) links.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id));
+  }), { rootMargin:"-45% 0px -50% 0px" });
+  ["problem","try","day","act"].forEach(id => secObs.observe(document.getElementById(id)));
+
+  // 차가운 창문에 눈 내리기
+  const coldWin = $(".win.cold");
+  if (coldWin && !calm){
+    const snow = document.createElement("div"); snow.className = "snow";
+    for (let i = 0; i < 26; i++){
+      const f = document.createElement("i");
+      f.style.left = Math.random() * 100 + "%";
+      f.style.setProperty("--s", (2 + Math.random() * 4).toFixed(1) + "px");
+      f.style.setProperty("--o", (.45 + Math.random() * .5).toFixed(2));
+      f.style.setProperty("--d", (6 + Math.random() * 7).toFixed(1) + "s");
+      f.style.setProperty("--delay", (-Math.random() * 12).toFixed(1) + "s");
+      f.style.setProperty("--x", (Math.random() * 40 - 20).toFixed(0) + "px");
+      snow.appendChild(f);
+    }
+    coldWin.appendChild(snow);
+  }
+
+  // 마우스를 따라 창문이 살짝 기울어요
+  const wins = $(".windows");
+  if (wins && !calm && matchMedia("(hover:hover)").matches){
+    const houses = wins.querySelectorAll(".house");
+    wins.addEventListener("mousemove", e => {
+      const r = wins.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      houses.forEach(h => h.style.transform = `rotateY(${(x * 8).toFixed(2)}deg) rotateX(${(-y * 6).toFixed(2)}deg) translateY(-4px)`);
+    });
+    wins.addEventListener("mouseleave", () => houses.forEach(h => h.style.transform = ""));
+  }
+
+  // 통계 숫자가 올라가요
+  function countUp(el){
+    const node = el.firstChild; if (!node || node.nodeType !== 3) return;
+    const raw = node.textContent, end = parseFloat(raw), dec = (raw.split(".")[1] || "").length, t0 = performance.now(), dur = 1200;
+    const step = now => { const p = Math.min(1, (now - t0) / dur); node.textContent = (end * (1 - Math.pow(1 - p, 3))).toFixed(dec); if (p < 1) requestAnimationFrame(step); else node.textContent = raw; };
+    requestAnimationFrame(step);
+  }
+
+  // 스크롤하면 한 번씩 나타나요
+  $$(".sec-head, .define, .program, .chart-card, .try .grid").forEach(el => el.classList.add("reveal-up"));
+  $$(".stats, .acts, .moments, .degree .grid").forEach(el => el.classList.add("stagger"));
+  const revObs = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add("in"); revObs.unobserve(e.target);
+    if (e.target.matches(".stats") && !calm) e.target.querySelectorAll(".stat b").forEach(countUp);
+  }), { threshold:.12 });
+  $$(".reveal-up, .stagger").forEach(el => revObs.observe(el));
+
+  // 그래프가 보이면 선을 그려요
+  const chartObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ $("#chart").classList.add("drawn"); chartObs.disconnect(); } }), { threshold:.35 });
+  chartObs.observe($("#chart"));
 })();
