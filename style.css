@@ -434,3 +434,72 @@ body{background:#fff}
 footer{background:#2B2420}
 .stat.hl,.calc{box-shadow:var(--sh-2)}
 .chip[aria-pressed="true"],.opt[aria-pressed="true"]{box-shadow:none}
+
+/* =========================================================
+   호버 인터랙션 강화: 마우스를 올리면 반응하는 카드들
+   ========================================================= */
+.act-card,.program,.stat,.convert,.box,.story,.room,.conv-list li,.items li,.moment,.define{
+  position:relative;
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .25s,background-color .25s;
+}
+
+/* 함께하기 카드: 떠오르고, 위쪽 초록 선이 그어지고, 제목이 살짝 이동 */
+.act-card{overflow:hidden;cursor:default}
+.act-card::before{content:"";position:absolute;left:0;top:0;height:4px;width:100%;background:linear-gradient(90deg,var(--olive),var(--wheat));transform:scaleX(0);transform-origin:0 50%;transition:transform .45s var(--ease)}
+.act-card:hover{transform:translateY(-6px);border-color:rgba(94,115,34,.35);box-shadow:var(--sh-3)}
+.act-card:hover::before{transform:scaleX(1)}
+.act-card h3,.act-card .kicker{transition:transform .35s var(--ease),color .25s}
+.act-card:hover h3{transform:translateX(4px)}
+.act-card:hover .kicker{color:var(--olive)}
+.act-card .btn{transition:transform .25s var(--ease),box-shadow .25s,background-color .2s,letter-spacing .25s}
+.act-card:hover .btn{transform:translateY(-2px);box-shadow:var(--sh-2)}
+
+/* 사랑의 난방비 띠: 불꽃이 흔들리고 배경이 따뜻해짐 */
+.program:hover{transform:translateY(-4px);border-color:rgba(232,137,47,.35);background:#FFFBF3;box-shadow:var(--sh-3)}
+.program .ico{transition:transform .3s var(--ease),background-color .25s}
+.program:hover .ico{background:#FFEFD6;animation:flicker .9s ease-in-out infinite}
+@keyframes flicker{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-6deg) scale(1.08)}50%{transform:rotate(4deg) scale(1.04)}75%{transform:rotate(-3deg) scale(1.1)}}
+.program a{transition:color .2s}
+.program a:hover{color:var(--amber)}
+
+/* 통계 카드 */
+.stat:hover{transform:translateY(-6px);box-shadow:var(--sh-3)}
+.stat:not(.hl):hover{background:#fff;border-color:rgba(94,115,34,.3)}
+.stat b{display:inline-block;transition:transform .35s var(--ease)}
+.stat:hover b{transform:scale(1.06);transform-origin:0 100%}
+
+/* 에너지 빈곤 설명 */
+.define:hover{transform:translateY(-3px);box-shadow:var(--sh-2)}
+.define .ico,.items .em,.conv-list .em{transition:transform .3s var(--ease)}
+.define:hover .ico{transform:rotate(-8deg) scale(1.1)}
+
+/* 결과 화면 */
+.room:hover{transform:translateY(-4px);box-shadow:var(--sh-3)}
+.story:hover{transform:translateX(4px);box-shadow:var(--sh-2)}
+.box:hover{background:#fff;box-shadow:inset 0 0 0 1px var(--line),var(--sh-2)}
+.items li:hover .em{transform:scale(1.15) rotate(-6deg)}
+
+/* 1도 섹션 */
+.convert:hover{transform:translateY(-4px)}
+.conv-list li:hover{background:#fff;box-shadow:inset 0 0 0 1px rgba(94,115,34,.25);transform:translateX(4px)}
+.conv-list li:hover .em{transform:scale(1.12)}
+.calc{transition:transform .35s var(--ease),box-shadow .35s}
+.calc:hover{transform:translateY(-4px);box-shadow:var(--sh-3)}
+
+/* 그 아이의 하루 */
+.moment:hover{transform:translateY(-6px)}
+.moment .time span{transition:color .25s}
+.moment:hover .time span{color:#fff}
+
+/* 푸터 링크 */
+footer a{text-decoration-color:transparent;transition:color .2s,text-decoration-color .2s}
+footer a:hover{text-decoration-color:currentColor}
+
+@media (hover:none){
+  .act-card:hover,.program:hover,.stat:hover,.room:hover,.story:hover,.convert:hover,.conv-list li:hover,.calc:hover,.moment:hover,.define:hover{transform:none}
+}
+/* '동작 줄이기' 설정에서도 색·그림자 반응은 보이도록 */
+@media (prefers-reduced-motion:reduce){
+  *{transition-property:color,background-color,border-color,box-shadow,opacity!important;transition-duration:.2s!important}
+  .program:hover .ico{animation:none!important}
+}
