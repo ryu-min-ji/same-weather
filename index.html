@@ -7,11 +7,20 @@
 <meta name="description" content="오늘 우리 동네 기온으로, 난방하지 못하는 방에서 겨울을 나는 아이의 하루와 지금 필요한 것을 보여 드려요.">
 <meta property="og:title" content="같은 날씨, 다른 겨울">
 <meta property="og:description" content="내 방은 몇 도인가요? 같은 하늘 아래 다른 겨울을 나는 아이의 방과 비교해 보세요.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ryu-min-ji.github.io/same-weather/">
+<meta property="og:image" content="https://ryu-min-ji.github.io/same-weather/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#5E7322">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -28,6 +37,7 @@
       <a href="#problem">왜 지금</a>
       <a href="#try">두 방 비교</a>
       <a href="#day">그 아이의 하루</a>
+      <a href="#nation">전국</a>
       <a href="#act">함께하기</a>
     </nav>
     <a class="nav-cta" href="#try">내 방과 비교하기</a>
@@ -134,6 +144,17 @@
               <button class="chip" data-doing="meal" aria-pressed="false">🍚 식사</button>
             </div>
           </div>
+          <div class="step" id="q-house">
+            <div class="step-title"><i>4</i>그 아이는 어떤 집에 살까요?</div>
+            <p class="step-sub">집 구조에 따라 겨울 방 온도가 달라져요.</p>
+            <div class="houses" role="group" aria-label="그 아이가 사는 집">
+              <button class="house-opt" data-house="rooftop" aria-pressed="false"><span class="em">🏚️</span><b>옥탑방</b></button>
+              <button class="house-opt" data-house="semi" aria-pressed="false"><span class="em">🪜</span><b>반지하</b></button>
+              <button class="house-opt" data-house="old" aria-pressed="true"><span class="em">🏠</span><b>낡은 단독주택</b></button>
+              <button class="house-opt" data-house="villa" aria-pressed="false"><span class="em">🏢</span><b>오래된 연립</b></button>
+            </div>
+            <p class="house-note" id="houseNote"></p>
+          </div>
           <p class="err" id="err" role="alert"></p>
           <button class="btn block" id="show">두 방 비교하기</button>
         </div>
@@ -163,6 +184,7 @@
                 <h4>난방하지 못하는 방</h4>
                 <div class="t" id="tTheirs">--</div>
                 <p class="sub" id="subTheirs"></p>
+                <p class="house-tag" id="houseTag"></p>
                 <div class="meter"><div class="bar"><div class="fill" id="fTheirs"></div><div class="who" id="whoTheirs"></div></div><div class="scale"><span>0℃</span><span>WHO 18℃</span><span>30℃</span></div></div>
               </article>
             </div>
@@ -185,9 +207,10 @@
                 <div class="range-ends"><span>-20℃</span><span>15℃</span></div>
               </div>
             </div>
-            <p class="note" style="margin-top:12px">내 방은 고른 차림으로, 난방하지 못하는 방은 단열이 약한 집에서 난방을 끈 상황을 가정해 추정했어요.</p>
+            <p class="note" style="margin-top:12px">내 방은 고른 차림으로, 난방하지 못하는 방은 고른 집 구조에서 난방을 끈 상황을 가정해 추정했어요. 실측값이 아니라 이해를 돕기 위한 값이에요.</p>
             <div class="res-foot">
-              <button class="btn green" id="share">결과 공유하기</button>
+              <button class="btn green" id="saveCard">결과 카드 이미지 저장</button>
+              <button class="btn" id="share">링크 공유하기</button>
               <a class="btn ghost" href="#day">그 아이의 하루 보기</a>
             </div>
           </div>
@@ -212,10 +235,35 @@
             <span><i style="background:repeating-linear-gradient(90deg,#fff 0 4px,transparent 4px 7px)"></i>WHO 권장 18℃</span>
           </div>
         </div>
-        <svg id="chart" viewBox="0 0 1000 300" role="img" aria-label="앞으로 24시간 실내 온도 추정 그래프"></svg>
+        <div class="chart-wrap">
+          <svg id="chart" viewBox="0 0 1000 300" role="img" aria-label="앞으로 24시간 실내 온도 추정 그래프"></svg>
+          <div class="tip" id="tip" aria-hidden="true"></div>
+        </div>
+        <p class="chart-hint">그래프 위에 마우스를 올리거나 손가락으로 훑어 보세요.</p>
       </div>
       <div class="moments" id="moments"></div>
       <p class="note">시간별 방 온도는 바깥 기온으로 계산한 추정치이고, 장면은 에너지 빈곤 가정 아이들의 겨울을 바탕으로 재구성했어요.</p>
+    </div>
+  </section>
+
+  <section class="block nation" id="nation">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="kicker">전국의 그 방들</p>
+        <h2 class="display">오늘 밤, 가장 추운 방은<br>어디에 있을까요?</h2>
+        <p>전국 10개 도시의 오늘 밤 최저기온으로 난방하지 못하는 방의 온도를 추정했어요. 도시를 누르면 위의 비교도 그 도시 기준으로 바뀌어요.</p>
+      </div>
+      <div class="nation-grid">
+        <div class="map-card">
+          <svg id="map" viewBox="0 0 400 520" role="img" aria-label="전국 도시별 오늘 밤 추정 방 온도 지도"></svg>
+          <div class="map-legend"><span>따뜻함</span><i></i><span>매우 추움</span></div>
+        </div>
+        <div class="rank-card">
+          <h3>추운 순서</h3>
+          <ol class="rank" id="rank"><li class="loading">기온을 불러오는 중이에요.</li></ol>
+          <p class="note" id="nationNote">오늘 밤부터 내일 아침까지의 최저기온 기준이에요.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -249,6 +297,41 @@
             <li><span class="em">🌡️</span><div><b>내 방은 여전히</b><span>WHO 권장 18℃ 이상을 지켜 주세요</span></div><strong id="convRoom">20℃</strong></li>
           </ul>
         </div>
+      </div>
+      <div class="pledge">
+        <div class="pledge-text">
+          <h3>1℃ 나눔 약속하기</h3>
+          <p>약속을 남기면 이름이 들어간 약속 카드를 만들어 드려요. 이름은 카드에만 쓰이고 어디에도 저장되지 않아요.</p>
+        </div>
+        <form class="pledge-form" id="pledgeForm">
+          <label class="sr" for="pledgeName">이름 또는 별명</label>
+          <input id="pledgeName" maxlength="12" placeholder="이름 또는 별명" autocomplete="off">
+          <button class="btn green" type="submit">약속 카드 만들기</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="block faq" id="faq">
+    <div class="wrap faq-wrap">
+      <div class="sec-head">
+        <p class="kicker">자주 듣는 질문</p>
+        <h2 class="display">에너지 빈곤,<br>이런 오해가 있어요</h2>
+        <p>"그냥 조금 아끼면 되는 거 아니야?" 같은 질문에 답해 봤어요.</p>
+      </div>
+      <div class="qa">
+        <details open>
+          <summary>난방비가 부담되면 조금 덜 틀면 되지 않나요?</summary>
+          <div class="ans"><p>이미 덜 틀고 있어요. 소득 하위 20% 가구는 쓸 수 있는 소득의 10%를 에너지에 써요. 전체 평균의 두 배가 넘어요. 여기서 더 줄이면 방이 WHO 권장 최저 온도인 18℃ 아래로 떨어지고, 추위는 호흡기 질환 같은 건강 문제로 이어져요.</p><a href="https://www.khan.co.kr/article/202603152012005" target="_blank" rel="noopener">국가데이터처 통계, 경향신문</a></div>
+        </details>
+        <details>
+          <summary>요즘에도 정말 그렇게 추운 집이 있나요?</summary>
+          <div class="ans"><p>있어요. 반지하, 옥탑방, 오래된 단독주택처럼 단열이 약한 집은 보일러를 켜도 열이 금방 빠져나가요. 서울시는 2014년 소득의 10% 이상을 냉난방에 쓰는 에너지 빈곤층이 서울에만 36만 가구라고 밝혔어요.</p><a href="https://news.seoul.go.kr/env/archives/50065" target="_blank" rel="noopener">서울특별시 환경 누리집(2014)</a></div>
+        </details>
+        <details>
+          <summary>정부 지원이 있지 않나요?</summary>
+          <div class="ans"><p>에너지바우처 같은 정부 지원이 있어요. 하지만 지원 기준에 조금 못 미치거나 제도를 몰라서 도움을 받지 못하는 가정도 있어요. 그래서 '사랑 ON(溫) 난방비'처럼 민간이 함께하는 지원이 필요해요.</p><a href="https://weekly.khan.co.kr/article/202006121300071" target="_blank" rel="noopener">주간경향 보도</a></div>
+        </details>
       </div>
     </div>
   </section>
@@ -308,6 +391,6 @@
 </footer>
 <div class="toast" id="toast" role="status"></div>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
