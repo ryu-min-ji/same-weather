@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>같은 날씨, 다른 겨울</title>
+<meta name="description" content="오늘 기온으로, 난방하지 못하는 방에서 겨울을 나는 아이에게 지금 필요한 것을 추천해 드려요.">
+<meta property="og:title" content="같은 날씨, 다른 겨울">
+<meta property="og:description" content="내 방은 몇 도인가요? 같은 하늘 아래 다른 겨울을 나는 아이의 방과 비교해 보세요.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --olive:#8BA332;      /* 굿네이버스 그린 */
+  --olive-deep:#5E7322;
+  --bark:#4E3F37;       /* 굿네이버스 브라운 */
+  --bark-soft:#7A6A60;
+  --wheat:#F6CD55;      /* 따뜻함 */
+  --leaf:#EEF1E2;
+  --paper:#FBFBF7;
+  --frost:#DCE7F1;
+  --ice:#6F8FB3;
+  --chill:0;            /* 0 = 따뜻, 1 = 매우 추움 (JS) */
+  --display:"Black Han Sans","Pretendard",sans-serif;
+  --body:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--body);color:var(--bark);
+  background:color-mix(in oklab, var(--paper), var(--frost) calc(var(--chill) * 100%));
+  transition:background-color .8s ease;
+  min-height:100dvh;line-height:1.6;word-break:keep-all;
+}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--olive);outline-offset:3px;border-radius:6px}
+.app{max-width:440px;margin:0 auto;padding:20px 20px calc(32px + env(safe-area-inset-bottom));min-height:100dvh;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column}
+.screen.on{display:flex}
+
+/* ---------- 공통 ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;font-size:14px;color:var(--bark-soft);min-height:32px}
+.brand{font-family:var(--display);font-size:16px;color:var(--olive-deep);letter-spacing:-.01em}
+.back{font-size:14px;color:var(--bark-soft);padding:6px 0}
+.btn{
+  display:block;width:100%;padding:17px 20px;border-radius:16px;
+  background:var(--bark);color:#fff;font-size:17px;font-weight:700;text-align:center;
+  transition:transform .12s ease, background-color .2s ease;
+}
+.btn:active{transform:scale(.98)}
+.btn:hover{background:#3E322C}
+.btn.ghost{background:transparent;color:var(--bark);border:1.5px solid color-mix(in oklab,var(--bark),transparent 70%)}
+.btn.ghost:hover{background:color-mix(in oklab,var(--bark),transparent 92%)}
+.btn.green{background:var(--olive-deep)}
+.btn.green:hover{background:#4C5E1B}
+.note{font-size:12.5px;color:var(--bark-soft);line-height:1.55}
+
+/* ---------- 첫 화면 ---------- */
+.hero{flex:1;display:flex;flex-direction:column;justify-content:center;padding:28px 0 24px}
+.place{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:600;color:var(--bark-soft)}
+.place .dot{width:8px;height:8px;border-radius:50%;background:var(--olive);box-shadow:0 0 0 4px color-mix(in oklab,var(--olive),transparent 80%)}
+.place.loading .dot{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+.big-temp{
+  font-family:var(--display);font-size:clamp(112px,36vw,152px);line-height:.92;letter-spacing:-.04em;
+  color:color-mix(in oklab, var(--bark), var(--ice) calc(var(--chill) * 100%));
+  margin:10px 0 18px;font-variant-numeric:tabular-nums;transition:color .8s ease;
+}
+.big-temp small{font-family:var(--body);font-weight:800;font-size:.34em;letter-spacing:0;vertical-align:1.25em;margin-left:6px}
+.room .t small,.colder-row b small{font-family:var(--body);font-weight:800}
+.low-line{margin:-6px 0 22px;font-size:16px;font-weight:700;color:var(--ice)}
+.low-line:empty{display:none}
+.hero h1{font-family:var(--display);font-weight:400;font-size:34px;line-height:1.2;letter-spacing:-.02em;color:var(--bark)}
+.hero .lead{margin-top:12px;font-size:16.5px;color:var(--bark-soft);max-width:30ch}
+.cities{display:flex;gap:6px;overflow-x:auto;padding:4px 0 2px;margin:22px -20px 0;padding-left:20px;padding-right:20px;scrollbar-width:none}
+.cities::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;padding:8px 13px;border-radius:999px;font-size:14px;font-weight:600;
+  background:color-mix(in oklab,var(--paper),var(--bark) 6%);color:var(--bark);
+  transition:background-color .15s ease, color .15s ease, transform .12s ease;
+}
+.chip:active{transform:scale(.96)}
+.chip[aria-pressed="true"]{background:var(--olive-deep);color:#fff}
+.manual{margin-top:16px;display:none}
+.manual.on{display:block}
+.intro-foot{display:grid;gap:10px}
+
+/* ---------- 입력 화면 ---------- */
+.ask{padding:20px 0 8px}
+.ask h2{font-family:var(--display);font-weight:400;font-size:27px;line-height:1.25;letter-spacing:-.02em}
+.ask p{margin-top:6px;font-size:15px;color:var(--bark-soft)}
+.weather-line{margin-top:14px;font-size:14px;color:var(--bark-soft)}
+.weather-line b{color:var(--bark)}
+.q{margin-top:26px}
+.q-title{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline}
+.q-title span{font-size:13px;font-weight:500;color:var(--bark-soft)}
+.wear{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{
+  position:relative;text-align:left;padding:16px 14px 14px;border-radius:18px;background:#fff;
+  border:1.5px solid color-mix(in oklab,var(--bark),transparent 88%);
+  transition:border-color .15s ease, background-color .15s ease, transform .12s ease;
+}
+.opt:active{transform:scale(.97)}
+.opt .ico{font-size:28px;line-height:1;display:block;margin-bottom:10px}
+.opt b{display:block;font-size:15px;line-height:1.35}
+.opt i{font-style:normal;display:block;font-size:12.5px;color:var(--bark-soft);margin-top:3px}
+.opt[aria-pressed="true"]{border-color:var(--olive-deep);background:var(--leaf)}
+.opt[aria-pressed="true"]::after{
+  content:"";position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;
+  background:var(--olive-deep) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3L15 6.8' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/20px no-repeat;
+}
+.doing{display:flex;flex-wrap:wrap;gap:8px}
+.doing .chip{padding:11px 16px;font-size:15px;background:#fff;border:1.5px solid color-mix(in oklab,var(--bark),transparent 88%)}
+.doing .chip[aria-pressed="true"]{background:var(--olive-deep);border-color:var(--olive-deep);color:#fff}
+.q.missing .q-title{color:#B4472E}
+.err{min-height:22px;margin:18px 0 10px;font-size:14px;font-weight:600;color:#B4472E}
+
+/* ---------- 결과 ---------- */
+.result-head{padding:18px 0 4px}
+.result-head p{font-size:15px;color:var(--bark-soft)}
+.result-head h2{font-family:var(--display);font-weight:400;font-size:28px;line-height:1.25;letter-spacing:-.02em;margin-top:4px}
+
+.rooms{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:30px}
+.room{position:relative;overflow:hidden;border-radius:22px;padding:16px 14px 14px;min-height:268px;display:flex;flex-direction:column}
+.room.mine{background:linear-gradient(170deg,#FFF6D9 0%,#FCE6B0 100%)}
+.room.theirs{background:linear-gradient(170deg,#E9F0F6 0%,#C9D8E7 100%);color:#2F3E4E}
+.room h3{font-size:13.5px;font-weight:700;position:relative;z-index:2}
+.room .t{font-family:var(--display);font-size:56px;line-height:1;letter-spacing:-.03em;margin-top:6px;position:relative;z-index:2;font-variant-numeric:tabular-nums}
+.room .t small{font-size:.45em;vertical-align:.8em;margin-left:2px}
+.room .sub{font-size:12.5px;line-height:1.45;margin-top:4px;position:relative;z-index:2;opacity:.8}
+.gauge{position:relative;z-index:2;margin-top:auto;height:96px;display:flex;align-items:flex-end;gap:10px}
+.tube{position:relative;width:16px;height:100%;border-radius:999px;background:rgba(255,255,255,.65);overflow:hidden}
+.tube .fill{position:absolute;left:0;right:0;bottom:0;border-radius:999px;transition:height .9s cubic-bezier(.2,.8,.2,1)}
+.mine .fill{background:linear-gradient(#F2A93B,#E5832B)}
+.theirs .fill{background:linear-gradient(#8FB0D3,#5F82AA)}
+.who{position:absolute;left:-4px;right:-4px;height:2px;background:var(--bark);opacity:.55}
+.gauge .legend{font-size:11px;line-height:1.35;opacity:.75;padding-bottom:2px}
+/* 성에 */
+.frost{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .9s ease;
+  background:
+    radial-gradient(120px 90px at 0% 0%, rgba(255,255,255,.95), transparent 70%),
+    radial-gradient(140px 120px at 100% 100%, rgba(255,255,255,.9), transparent 70%),
+    radial-gradient(90px 70px at 100% 0%, rgba(255,255,255,.7), transparent 70%),
+    radial-gradient(80px 60px at 0% 100%, rgba(255,255,255,.75), transparent 70%);
+  filter:url(#frostNoise);
+}
+.gap{
+  position:absolute;left:50%;top:0;transform:translate(-50%,-50%);z-index:3;
+  background:var(--bark);color:#fff;border-radius:999px;padding:7px 11px;
+  font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 6px 18px rgba(78,63,55,.25);
+}
+.assume{margin-top:10px}
+
+.story{margin-top:26px;padding:20px 18px;border-radius:20px;background:#fff;border-left:5px solid var(--ice)}
+.story .when{font-size:13px;font-weight:700;color:var(--ice)}
+.story blockquote{margin-top:8px;font-size:18.5px;line-height:1.55;font-weight:600;letter-spacing:-.01em}
+.story .note{margin-top:10px}
+
+.section{margin-top:30px}
+.section h3{font-family:var(--display);font-weight:400;font-size:21px;letter-spacing:-.01em;line-height:1.3}
+.section > p{font-size:14.5px;color:var(--bark-soft);margin-top:4px}
+
+.items{list-style:none;margin-top:14px;display:grid;gap:8px}
+.items li{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;background:color-mix(in oklab,#fff,var(--leaf) 50%)}
+.items .em{width:44px;height:44px;border-radius:12px;background:#fff;display:grid;place-items:center;font-size:24px}
+.items b{display:block;font-size:15.5px}
+.items span{display:block;font-size:13px;color:var(--bark-soft);line-height:1.45}
+
+.colder{margin-top:14px;padding:18px 16px;border-radius:20px;background:#fff}
+.colder-row{display:flex;justify-content:space-between;align-items:baseline}
+.colder-row b{font-family:var(--display);font-weight:400;font-size:30px;color:var(--ice);font-variant-numeric:tabular-nums}
+.colder-row span{font-size:14px;font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:36px;background:transparent;margin-top:6px}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:999px;background:linear-gradient(90deg,#5F82AA,#C9D8E7 55%,#F6CD55)}
+input[type=range]::-moz-range-track{height:8px;border-radius:999px;background:linear-gradient(90deg,#5F82AA,#C9D8E7 55%,#F6CD55)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:3px solid var(--bark);margin-top:-10px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--bark)}
+.range-ends{display:flex;justify-content:space-between;font-size:12px;color:var(--bark-soft)}
+
+.calc{margin-top:14px;padding:20px 18px;border-radius:22px;background:var(--olive-deep);color:#fff}
+.calc .step{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.calc .step p{font-size:15px;font-weight:600}
+.stepper{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.14);border-radius:999px;padding:4px}
+.stepper button{width:36px;height:36px;border-radius:50%;color:#fff;font-size:20px;font-weight:700;transition:background-color .15s}
+.stepper button:hover{background:rgba(255,255,255,.18)}
+.stepper button:disabled{opacity:.35;cursor:default;background:none}
+.stepper output{min-width:44px;text-align:center;font-family:var(--display);font-size:22px}
+.calc .money{font-family:var(--display);font-size:44px;line-height:1.05;margin-top:16px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.calc .money-sub{font-size:14.5px;opacity:.9;margin-top:6px}
+.calc .note{color:rgba(255,255,255,.75);margin-top:12px}
+
+.facts{margin-top:14px;display:grid;gap:8px}
+.fact{padding:14px 16px;border-radius:16px;background:#fff;font-size:14.5px;line-height:1.55}
+.fact b{font-family:var(--display);font-weight:400;font-size:24px;color:var(--olive-deep);display:block;line-height:1.2}
+.fact a{color:var(--bark-soft);font-size:12.5px}
+
+.actions{display:grid;gap:10px;margin-top:30px}
+.foot{margin-top:28px;padding-top:18px;border-top:1px solid color-mix(in oklab,var(--bark),transparent 85%)}
+.foot ul{list-style:none;margin-top:6px;display:grid;gap:3px}
+.foot a{color:var(--bark-soft)}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--bark);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:10}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* 결과 등장 한 번 */
+.reveal .rooms .room{animation:rise .6s cubic-bezier(.2,.8,.2,1) both}
+.reveal .rooms .theirs{animation-delay:.18s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="frostNoise"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0" /><feComposite in2="SourceGraphic" operator="in"/></filter>
+</svg>
+
+<main class="app">
+
+  <!-- 1. 첫 화면 -->
+  <section class="screen on" id="s-intro" aria-labelledby="t-intro">
+    <div class="top"><span class="brand">같은 날씨, 다른 겨울</span></div>
+    <div class="hero">
+      <span class="place loading" id="place"><span class="dot"></span><span id="placeText">기온을 불러오는 중</span></span>
+      <div class="big-temp" id="bigTemp" aria-live="polite">--<small>℃</small></div>
+      <p class="low-line" id="lowLine"></p>
+      <h1 id="t-intro"><span id="headline">오늘 바깥은 쌀쌀해요.</span><br>당신의 방은 몇 도인가요?</h1>
+      <p class="lead">같은 날씨라도 집 안의 겨울은 집마다 달라요. 난방을 하지 못하는 방에서 겨울을 나는 아이와 내 방을 비교해 보세요.</p>
+      <div class="cities" id="cities" role="group" aria-label="도시 선택"></div>
+      <div class="manual" id="manual">
+        <p class="note">기온을 불러오지 못했어요. 오늘 바깥 기온을 직접 맞춰 주세요.</p>
+        <input type="range" id="manualTemp" min="-20" max="15" step="1" value="0" aria-label="바깥 기온">
+      </div>
+    </div>
+    <div class="intro-foot">
+      <button class="btn" id="go">내 방과 비교해 보기</button>
+      <p class="note">위치는 기온을 불러오는 데만 쓰고 저장하지 않아요.</p>
+    </div>
+  </section>
+
+  <!-- 2. 입력 화면 -->
+  <section class="screen" id="s-input" aria-labelledby="t-input">
+    <div class="top"><button class="back" data-go="s-intro">‹ 처음으로</button><span class="brand">같은 날씨, 다른 겨울</span></div>
+    <div class="ask">
+      <h2 id="t-input">지금 내 방의 겨울을 알려 주세요</h2>
+      <p>방 온도를 몰라도 괜찮아요. 지금 입고 있는 옷이면 충분해요.</p>
+      <p class="weather-line" id="weatherLine"></p>
+    </div>
+
+    <div class="q" id="q-wear">
+      <div class="q-title">지금 방에서 어떤 차림인가요?</div>
+      <div class="wear" role="group" aria-label="지금 차림">
+        <button class="opt" data-wear="23" aria-pressed="false"><span class="ico">👕</span><b>반팔로 있어요</b><i>방이 따뜻해요</i></button>
+        <button class="opt" data-wear="20" aria-pressed="false"><span class="ico">🧶</span><b>긴팔이나 맨투맨</b><i>적당히 따뜻해요</i></button>
+        <button class="opt" data-wear="17" aria-pressed="false"><span class="ico">🛋️</span><b>담요를 둘렀어요</b><i>조금 서늘해요</i></button>
+        <button class="opt" data-wear="14" aria-pressed="false"><span class="ico">🧥</span><b>실내에서도 겉옷</b><i>방이 추워요</i></button>
+      </div>
+    </div>
+
+    <div class="q" id="q-doing">
+      <div class="q-title">지금 무엇을 하고 있나요?</div>
+      <div class="doing" role="group" aria-label="지금 하는 일">
+        <button class="chip" data-doing="study" aria-pressed="false">📖 공부하는 중</button>
+        <button class="chip" data-doing="sleep" aria-pressed="false">🌙 잠들기 전</button>
+        <button class="chip" data-doing="wash" aria-pressed="false">🚿 씻으려는 중</button>
+        <button class="chip" data-doing="meal" aria-pressed="false">🍚 밥 먹는 중</button>
+      </div>
+    </div>
+
+    <p class="err" id="err" role="alert"></p>
+    <button class="btn" id="show">두 방 비교하기</button>
+  </section>
+
+  <!-- 3. 결과 화면 -->
+  <section class="screen" id="s-result" aria-labelledby="t-result">
+    <div class="top"><button class="back" data-go="s-input">‹ 다시 고르기</button><span class="brand">같은 날씨, 다른 겨울</span></div>
+
+    <div class="result-head">
+      <p id="rPlace"></p>
+      <h2 id="t-result">같은 하늘 아래, 두 개의 방</h2>
+    </div>
+
+    <div class="rooms" id="rooms">
+      <article class="room mine" aria-label="내 방">
+        <h3>내 방</h3>
+        <div class="t" id="tMine">--<small>℃</small></div>
+        <p class="sub" id="subMine"></p>
+        <div class="gauge"><div class="tube"><div class="fill" id="fMine"></div><div class="who" id="whoMine"></div></div><span class="legend">선은<br>WHO 권장<br>최저 18℃</span></div>
+      </article>
+      <article class="room theirs" aria-label="난방하지 못하는 방">
+        <div class="frost" id="frost"></div>
+        <h3>난방하지 못하는 방</h3>
+        <div class="t" id="tTheirs">--<small>℃</small></div>
+        <p class="sub" id="subTheirs"></p>
+        <div class="gauge"><div class="tube"><div class="fill" id="fTheirs"></div><div class="who" id="whoTheirs"></div></div><span class="legend" id="legendTheirs"></span></div>
+      </article>
+      <div class="gap" id="gap" aria-live="polite"></div>
+    </div>
+    <p class="note assume">내 방 온도는 고른 차림으로, 난방하지 못하는 방은 단열이 약한 집에서 난방을 끈 상황을 가정해 추정했어요.</p>
+
+    <div class="story" id="story">
+      <div class="when" id="storyWhen"></div>
+      <blockquote id="storyText"></blockquote>
+      <p class="note">에너지 빈곤 가정 아이들의 겨울을 바탕으로 재구성한 장면이에요.</p>
+    </div>
+
+    <div class="section">
+      <h3 id="itemsTitle">이 방의 아이에게 지금 필요한 것</h3>
+      <p id="itemsLead"></p>
+      <ul class="items" id="items"></ul>
+    </div>
+
+    <div class="section">
+      <h3>더 추운 날이라면?</h3>
+      <p>바깥 기온을 바꾸면 두 방과 필요한 것이 함께 바뀌어요.</p>
+      <div class="colder">
+        <div class="colder-row"><span>바깥 기온</span><b id="colderVal">0℃</b></div>
+        <input type="range" id="colder" min="-20" max="15" step="1" value="0" aria-label="바깥 기온 바꿔 보기">
+        <div class="range-ends"><span>-20℃</span><span>15℃</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>내 방 1℃가 할 수 있는 일</h3>
+      <p>난방 온도를 조금 낮추고, 아낀 만큼 나눌 수 있어요.</p>
+      <div class="calc">
+        <div class="step">
+          <p>보일러 온도를</p>
+          <div class="stepper">
+            <button id="minus" aria-label="1도 덜 낮추기">−</button>
+            <output id="deg" aria-live="polite">1℃</output>
+            <button id="plus" aria-label="1도 더 낮추기">+</button>
+          </div>
+        </div>
+        <p class="money" id="money"></p>
+        <p class="money-sub" id="moneySub"></p>
+        <p class="note">난방 온도를 1℃ 낮추면 에너지 소비가 약 7% 줄어요. 서울 도시가스 평균 단가 기준 월 약 5,150원이에요(한국에너지공단). 겨울은 12~2월 석 달로 계산했어요.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>알아 두면 좋은 숫자</h3>
+      <div class="facts">
+        <div class="fact"><b>다섯 집 중 한 집</b>서울 저소득 가구의 에너지 빈곤율은 1년 평균 12.5%지만, 겨울에는 20.3%까지 올라가요.<br><a href="https://futurechosun.com/?p=52473" target="_blank" rel="noopener">서울연구원 조사, 더나은미래 보도</a></div>
+        <div class="fact"><b>최저 18℃</b>세계보건기구는 추위로부터 건강을 지키려면 실내가 최소 18℃는 되어야 하고, 아이에게는 그보다 따뜻해야 할 수 있다고 권고해요.<br><a href="https://www.ncbi.nlm.nih.gov/books/NBK535294/" target="_blank" rel="noopener">WHO 주거와 건강 가이드라인(2018)</a></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn green" id="share">결과 공유하기</button>
+      <a class="btn ghost" href="https://www.goodneighbors.kr/" target="_blank" rel="noopener">아이들의 겨울을 돕는 나눔 둘러보기</a>
+      <button class="btn ghost" id="restart">처음부터 다시 하기</button>
+    </div>
+
+    <footer class="foot">
+      <p class="note">이 서비스는 굿네이버스 Web:메이커스 1기 활동으로 만든 개인 프로젝트이며, 굿네이버스 공식 서비스가 아니에요. 기온 정보는 Open-Meteo에서 받아 와요.</p>
+      <ul class="note">
+        <li><a href="https://futurechosun.com/?p=31542" target="_blank" rel="noopener">굿네이버스 '사랑의 난방비' 사업 보도</a></li>
+        <li><a href="https://www.segye.com/newsView/20251201501679" target="_blank" rel="noopener">난방 1℃ 절감 효과(한국에너지공단) 보도</a></li>
+      </ul>
+    </footer>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+
+  const CITIES = [
+    ["서울",37.5665,126.978],["인천",37.4563,126.7052],["수원",37.2636,127.0286],["청주",36.6424,127.489],
+    ["대전",36.3504,127.3845],["대구",35.8714,128.6014],["광주",35.1595,126.8526],["부산",35.1796,129.0756],
+    ["강릉",37.7519,128.8761],["제주",33.4996,126.5312]
+  ];
+
+  const state = { outdoor: null, place: "서울", wear: null, doing: null, deg: 1 };
+
+  /* ---------- 데이터 ---------- */
+  // 단열이 약하고 난방을 끈 방의 실내 온도 추정 (설명용 단순 모델)
+  const theirRoom = t => Math.min(16, Math.round(t * 0.5 + 9));
+  const band = room => room <= 5 ? "severe" : room <= 11 ? "cold" : "cool";
+
+  const STORIES = {
+    study: { when: "내가 공부하는 지금, 그 방에서는", severe:"입김이 보이는 방에서 숙제를 해요. 손이 곱아서 글씨가 자꾸 삐뚤어져요.", cold:"이불을 어깨에 두르고 책상 앞에 앉아요. 30분마다 손을 비벼 녹여요.", cool:"겉옷을 입은 채 공부해요. 발이 시려서 자꾸 집중이 끊겨요." },
+    sleep: { when: "내가 잠들기 전 이 시간, 그 방에서는", severe:"패딩을 입은 채 이불 두 장을 덮고 누워요. 그래도 코끝이 시려 쉽게 잠들지 못해요.", cold:"동생과 한 이불 속에 꼭 붙어서 서로의 체온으로 버텨요.", cool:"양말을 두 겹 신고 잠자리에 들어요. 새벽이면 추워서 한 번씩 깨요." },
+    wash:  { when: "내가 씻으려는 지금, 그 방에서는", severe:"보일러를 켤 수 없어서 냄비에 데운 물 한 대야로 머리를 감아요.", cold:"온수가 아까워서 샤워는 이틀에 한 번, 최대한 빨리 끝내요.", cool:"욕실이 추워서 씻고 나오면 한참 동안 몸이 떨려요." },
+    meal:  { when: "내가 밥을 먹는 지금, 그 방에서는", severe:"식탁 대신 이불 속에서 밥을 먹어요. 국은 금방 식어 버려요.", cold:"따뜻한 국물 한 그릇이 하루 중 가장 따뜻한 순간이에요.", cool:"밥을 다 먹으면 서둘러 이불 속으로 들어가요." }
+  };
+
+  const ITEMS = {
+    severe: { lead:"방이 이 정도로 차가우면 건강이 먼저 위험해져요. 방 전체를 데우는 도움이 가장 급해요.", list:[
+      ["🔥","난방비 지원","꺼 두었던 보일러를 다시 켤 수 있어요. 방 전체가 따뜻해지는 가장 직접적인 도움이에요."],
+      ["🛏️","전기요","난방을 못 하는 밤에도 잠자리만큼은 따뜻하게 지켜 줘요."],
+      ["⛺","실내 방한 텐트","이불 위에 치면 외풍을 막아 텐트 안 온도를 몇 도 끌어올려요."]]},
+    cold: { lead:"찬 기운이 스며드는 방이에요. 바람을 막고 몸을 감싸는 것부터 필요해요.", list:[
+      ["🪟","문풍지와 단열 뽁뽁이","창문과 문틈으로 새는 찬바람을 막아 방이 덜 식어요."],
+      ["🧣","극세사 이불","얇은 이불 한 장보다 훨씬 따뜻하게 밤을 보낼 수 있어요."],
+      ["🧦","내복 세트","옷 안에 한 겹만 더 입어도 하루 종일 체온을 지켜 줘요."]]},
+    cool: { lead:"버틸 수는 있지만 오래 있으면 몸이 식는 방이에요. 몸을 따뜻하게 지키는 물품이 도움이 돼요.", list:[
+      ["🧦","수면양말","발이 따뜻하면 몸 전체가 덜 춥게 느껴져요."],
+      ["👕","내복","겉옷 안에 입으면 실내에서도 체온을 지킬 수 있어요."],
+      ["🥿","털 실내화","차가운 바닥에서 올라오는 냉기를 막아 줘요."]]}
+  };
+
+  /* ---------- 화면 전환 ---------- */
+  function go(id){
+    $$(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+    window.scrollTo({ top: 0 });
+    const h = $("#" + id + " h1, #" + id + " h2");
+    if (h) { h.setAttribute("tabindex","-1"); h.focus({ preventScroll:true }); }
+  }
+  $$("[data-go]").forEach(b => b.addEventListener("click", () => go(b.dataset.go)));
+
+  function setChill(t){
+    // 15℃ 이상은 0, -15℃ 이하는 1
+    const c = Math.max(0, Math.min(1, (15 - t) / 30));
+    document.documentElement.style.setProperty("--chill", c.toFixed(3));
+  }
+
+  /* ---------- 기온 ---------- */
+  function showTemp(t, place, low = t){
+    state.outdoor = low; state.now = t; state.place = place;
+    $("#bigTemp").innerHTML = `${t}<small>℃</small>`;
+    $("#placeText").textContent = `지금 ${place}`;
+    $("#lowLine").textContent = low < t ? `오늘 밤 최저 ${low}℃까지 내려가요` : "";
+    $("#place").classList.remove("loading");
+    $("#headline").textContent = low <= -5 ? "오늘 밤은 꽁꽁 얼어요." : low <= 0 ? "오늘 밤은 영하예요." : low <= 10 ? "오늘 밤은 쌀쌀해요." : "오늘은 포근한 편이에요.";
+    setChill(low);
+  }
+
+  async function fetchTemp(lat, lon){
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m&daily=temperature_2m_min&forecast_days=2&timezone=Asia%2FSeoul`;
+    const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 7000);
+    try {
+      const r = await fetch(url, { signal: ctrl.signal });
+      if (!r.ok) throw new Error(r.status);
+      const j = await r.json();
+      // 오늘 밤 최저: 오늘과 내일 새벽 최저 중 낮은 값
+      const lows = (j.daily && j.daily.temperature_2m_min) || [];
+      const now = Math.round(j.current.temperature_2m);
+      const low = lows.length ? Math.round(Math.min(...lows.slice(0, 2))) : now;
+      return { now, low: Math.min(low, now) };
+    } finally { clearTimeout(timer); }
+  }
+
+  async function loadCity(name, lat, lon){
+    $("#place").classList.add("loading");
+    $("#placeText").textContent = `${name} 기온을 불러오는 중`;
+    $$("#cities .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.name === name)));
+    try {
+      const t = await fetchTemp(lat, lon);
+      showTemp(t.now, name, t.low);
+      $("#manual").classList.remove("on");
+    } catch {
+      $("#place").classList.remove("loading");
+      $("#placeText").textContent = "기온을 불러오지 못했어요";
+      $("#manual").classList.add("on");
+      showTemp(+$("#manualTemp").value, "직접 입력");
+    }
+  }
+
+  function nearest(lat, lon){
+    let best = CITIES[0], d = Infinity;
+    for (const c of CITIES){ const dd = (c[1]-lat)**2 + (c[2]-lon)**2; if (dd < d){ d = dd; best = c; } }
+    return best[0];
+  }
+
+  CITIES.forEach(([n, la, lo]) => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = n; b.dataset.name = n; b.setAttribute("aria-pressed","false");
+    b.addEventListener("click", () => loadCity(n, la, lo));
+    $("#cities").appendChild(b);
+  });
+  const locBtn = document.createElement("button");
+  locBtn.className = "chip"; locBtn.textContent = "📍 내 위치";
+  locBtn.addEventListener("click", useLocation);
+  $("#cities").prepend(locBtn);
+
+  function useLocation(){
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(async p => {
+      const { latitude:la, longitude:lo } = p.coords;
+      const name = nearest(la, lo) + " 근처";
+      $$("#cities .chip").forEach(c => c.setAttribute("aria-pressed","false"));
+      locBtn.setAttribute("aria-pressed","true");
+      $("#place").classList.add("loading");
+      try { const t = await fetchTemp(la, lo); showTemp(t.now, name, t.low); }
+      catch { $("#manual").classList.add("on"); $("#place").classList.remove("loading"); $("#placeText").textContent = "기온을 불러오지 못했어요"; }
+    }, () => { /* 거부하면 도시 버튼으로 */ }, { timeout: 8000, maximumAge: 600000 });
+  }
+
+  $("#manualTemp").addEventListener("input", e => showTemp(+e.target.value, "직접 입력"));
+
+  // 시작: 서울 기온을 먼저 보여 주고, 위치 권한이 있으면 내 위치로 바꿔요
+  loadCity(...CITIES[0]);
+  useLocation();
+
+  $("#go").addEventListener("click", () => {
+    if (state.outdoor === null) showTemp(0, "직접 입력");
+    $("#weatherLine").innerHTML = state.now > state.outdoor
+      ? `${state.place} 지금 ${state.now}℃, <b>오늘 밤 최저 ${state.outdoor}℃</b> 기준으로 비교해요.`
+      : `오늘 바깥 기온은 <b>${state.place} ${state.outdoor}℃</b>예요.`;
+    go("s-input");
+  });
+
+  /* ---------- 입력 ---------- */
+  $$("[data-wear]").forEach(b => b.addEventListener("click", () => {
+    $$("[data-wear]").forEach(x => x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true"); state.wear = +b.dataset.wear;
+    $("#q-wear").classList.remove("missing"); updateErr();
+  }));
+  $$("[data-doing]").forEach(b => b.addEventListener("click", () => {
+    $$("[data-doing]").forEach(x => x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true"); state.doing = b.dataset.doing;
+    $("#q-doing").classList.remove("missing"); updateErr();
+  }));
+  function missing(){
+    const m = [];
+    if (state.wear === null) m.push(["#q-wear","지금 차림"]);
+    if (!state.doing) m.push(["#q-doing","지금 하는 일"]);
+    return m;
+  }
+  function updateErr(){ if ($("#err").textContent) { const m = missing(); $("#err").textContent = m.length ? `${m.map(x=>x[1]).join(", ")}을 골라 주세요.` : ""; } }
+  $("#show").addEventListener("click", () => {
+    const m = missing();
+    if (m.length){
+      m.forEach(([sel]) => $(sel).classList.add("missing"));
+      $("#err").textContent = `${m.map(x=>x[1]).join(", ")}을 골라 주세요.`;
+      $(m[0][0]).scrollIntoView({ behavior:"smooth", block:"center" });
+      return;
+    }
+    $("#err").textContent = "";
+    $("#colder").value = state.outdoor;
+    render(state.outdoor);
+    const r = $("#s-result"); r.classList.remove("reveal"); void r.offsetWidth; r.classList.add("reveal");
+    go("s-result");
+  });
+
+  /* ---------- 결과 ---------- */
+  const pct = t => Math.max(4, Math.min(100, (t / 30) * 100)); // 0~30℃ 눈금
+  function render(outdoor){
+    const mine = state.wear, theirs = theirRoom(outdoor), b = band(theirs);
+    setChill(outdoor);
+    $("#rPlace").textContent = outdoor === state.outdoor && state.place !== "직접 입력"
+      ? (state.now > outdoor ? `오늘 밤 ${state.place} 최저 ${outdoor}℃일 때` : `지금 ${state.place} 바깥 기온 ${outdoor}℃`)
+      : `바깥 기온 ${outdoor}℃일 때`;
+    $("#tMine").innerHTML = `${mine}<small>℃</small>`;
+    $("#tTheirs").innerHTML = `${theirs}<small>℃</small>`;
+    $("#subMine").textContent = mine >= 18 ? "건강을 지키기에 충분한 온도예요." : "조금 서늘하지만 난방을 켤 수 있어요.";
+    $("#subTheirs").textContent = theirs < 18 ? `권장 최저 온도보다 ${18 - theirs}℃ 낮아요.` : "그래도 밤이 되면 금방 식어요.";
+    $("#legendTheirs").innerHTML = b === "severe" ? "입김이<br>보여요" : b === "cold" ? "손발이<br>시려요" : "오래 있으면<br>추워요";
+    $("#fMine").style.height = pct(mine) + "%";
+    $("#fTheirs").style.height = pct(theirs) + "%";
+    $("#whoMine").style.bottom = $("#whoTheirs").style.bottom = pct(18) + "%";
+    $("#frost").style.opacity = Math.max(0, Math.min(1, (14 - theirs) / 12)).toFixed(2);
+    const g = mine - theirs;
+    $("#gap").textContent = g > 0 ? `${g}℃ 차이` : "비슷해요";
+
+    const s = STORIES[state.doing];
+    $("#storyWhen").textContent = s.when;
+    $("#storyText").textContent = s[b];
+
+    const it = ITEMS[b];
+    $("#itemsLead").textContent = it.lead;
+    $("#items").innerHTML = it.list.map(([e,n,d]) => `<li><span class="em" aria-hidden="true">${e}</span><div><b>${n}</b><span>${d}</span></div></li>`).join("");
+    $("#colderVal").textContent = `${outdoor}℃`;
+    renderCalc();
+  }
+  $("#colder").addEventListener("input", e => render(+e.target.value));
+
+  const won = n => n.toLocaleString("ko-KR");
+  function renderCalc(){
+    const d = state.deg, month = 5150 * d, winter = month * 3;
+    $("#deg").textContent = `${d}℃`;
+    $("#minus").disabled = d <= 1; $("#plus").disabled = d >= 3;
+    $("#money").textContent = `한 겨울 약 ${won(winter)}원`;
+    const times = winter / 10000;
+    $("#moneySub").textContent = `한 달에 ${won(month)}원씩, 석 달이면 월 1만원 정기 나눔 ${times.toFixed(1).replace(".0","")}번 분량이에요.`;
+  }
+  $("#minus").addEventListener("click", () => { state.deg = Math.max(1, state.deg - 1); renderCalc(); });
+  $("#plus").addEventListener("click", () => { state.deg = Math.min(3, state.deg + 1); renderCalc(); });
+
+  /* ---------- 공유 ---------- */
+  function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); setTimeout(() => t.classList.remove("on"), 2200); }
+  $("#share").addEventListener("click", async () => {
+    const outdoor = +$("#colder").value, theirs = theirRoom(outdoor);
+    const text = `바깥 ${outdoor}℃, 내 방은 ${state.wear}℃인데 난방하지 못하는 방은 ${theirs}℃래요. 같은 날씨, 다른 겨울 🌡️`;
+    const url = location.href.split("#")[0];
+    try {
+      if (navigator.share) { await navigator.share({ title:"같은 날씨, 다른 겨울", text, url }); return; }
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      toast("공유 문구와 링크를 복사했어요");
+    } catch (e) { if (e && e.name !== "AbortError") toast("복사하지 못했어요. 주소창의 링크를 공유해 주세요"); }
+  });
+  $("#restart").addEventListener("click", () => {
+    state.wear = null; state.doing = null; state.deg = 1;
+    $$("[aria-pressed]").forEach(b => { if (b.dataset.wear || b.dataset.doing) b.setAttribute("aria-pressed","false"); });
+    setChill(state.outdoor ?? 0);
+    go("s-intro");
+  });
+})();
+</script>
+</body>
+</html>
